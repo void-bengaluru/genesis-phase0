@@ -1,0 +1,248 @@
+/* Polished SOC-style terminal UI for /void::phase0
+   Inspired by the provided style: neon accents, clear window chrome,
+   readable monospace, and mobile-friendly layout. Content preserved. */
+
+:root{
+  --bg: #000000;
+  --panel: #041005; /* very dark green tint */
+  --prompt: #7CFC00; /* neon green for prompt */
+  --text: #ffffff; /* main white text */
+  --error: #ff5f56; /* red for errors */
+  --accent: #1e90ff; /* blue accent for highlights/links */
+  --op: #888888; /* operator / subdued */
+  --glass: rgba(255,255,255,0.03);
+}
+
+html, body{
+  height:100%;
+  margin:0;
+  background: radial-gradient(ellipse at top left, rgba(0,40,0,0.12), transparent 20%), var(--bg);
+  color:var(--text);
+  /* Make Menlo the global preferred font and set a consistent base size */
+  font-family: Menlo, 'IBM Plex Mono', 'Fira Mono', 'SFMono-Regular', 'Courier New', Courier, monospace;
+  font-size:13px; /* unify font-size to match console title */
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+}
+
+.container{
+  /* make the page container a fixed viewport layer so the terminal floats */
+  position:fixed;
+  inset:0; /* top:0; right:0; bottom:0; left:0 */
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:2rem 1rem;
+  z-index:900;
+  pointer-events:none; /* allow clicks to pass through except inside #console */
+}
+
+/* Terminal window shell */
+#console{
+  /* fixed, floating terminal centered in viewport */
+  position:fixed;
+  top:50%;
+  left:50%;
+  transform:translate(-50%,-50%);
+  width:calc(100% - 64px);
+  max-width:980px;
+  max-height:90vh;
+  background: linear-gradient(180deg, rgba(0,0,0,0.85), rgba(4,8,5,0.95));
+  border-radius:10px;
+  border:1px solid rgba(80,255,140,0.06);
+  padding:18px 18px 12px 18px;
+  box-sizing:border-box;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.8), 0 0 40px rgba(0,255,140,0.03) inset;
+  color:var(--text);
+  font-size:inherit; /* respect global font-size */
+  line-height:1.45;
+  overflow:visible; /* allow internal scrolling inside #console-output */
+  z-index:950;
+  pointer-events:auto; /* allow interaction inside the console */
+}
+
+/* Top 'window' bar to emulate a terminal window */
+#console::before{
+  content: '';
+  position: absolute;
+  top: -14px;
+  left: 16px;
+  right: 16px;
+  height: 30px;
+  border-radius:8px 8px 0 0;
+  /* darker, higher-contrast title bar so window controls remain visible */
+  background: linear-gradient(90deg, rgba(0,0,0,0.65), rgba(0,0,0,0.45));
+  box-shadow: 0 6px 18px rgba(0,0,0,0.7);
+  z-index: 0;
+}
+
+/* window control circles */
+#console .window-controls{
+  position: absolute;
+  left: 22px;
+  top: -8px;
+  display:flex;
+  gap:8px;
+}
+#console .window-controls{ z-index: 3; }
+#console .window-controls span{
+  width:12px;height:12px;border-radius:50%;display:inline-block;border:1px solid rgba(255,255,255,0.06);
+}
+#console .wc-red{background:#ff5f56}
+#console .wc-yellow{background:#ffbd2e}
+#console .wc-green{background:#27c93f}
+
+.console-header{
+  display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;padding-right:36px
+}
+.console-title{font-weight:700;color:var(--text);font-size:13px; font-family:inherit}
+.console-sub{color:var(--op);font-size:12px; font-family:inherit}
+
+/* ensure console children appear above the title-bar pseudo element */
+#console > *{ position:relative; z-index:2 }
+
+/* puzzle text should match header style (font family, size, color) */
+.puzzle-text{font-family:Menlo, 'IBM Plex Mono', 'Fira Mono', monospace; font-size:13px; color:var(--text); font-weight:500}
+.puzzle-binary{font-family:Menlo, 'IBM Plex Mono', 'Fira Mono', monospace; font-size:13px; color:var(--prompt); font-weight:600}
+
+/* footer label should match the title typography for pixel parity */
+.console-footer .puzzle-text{ font-family:inherit; font-size:13px; color:var(--text); font-weight:700 }
+
+.console-line{white-space:pre-wrap; word-break:break-word;margin:6px 0}
+.muted{color:var(--prompt)}
+.error{color:var(--error)}
+
+/* command echo color and output color */
+.cmd-echo{ color: var(--accent); font-weight:600 }
+.cmd-output{ color: var(--text) }
+
+/* Output area: holds the scrolling lines. Hidden scrollbars for a clean look */
+#console-output{
+  /* limit internal output height so the fixed console can scroll internally */
+  max-height: calc(72vh);
+  overflow:auto;
+  padding-right:6px;
+}
+
+/* hide scrollbars while keeping scroll behavior */
+#console-output::-webkit-scrollbar{width:0;height:0}
+#console-output{-ms-overflow-style: none; scrollbar-width: none}
+
+/* prompt / input area */
+.input-line{
+  display:flex;gap:10px;align-items:center;margin-top:6px
+}
+.prompt{color:var(--text);min-width:auto;margin-right:6px;white-space:nowrap}
+.cmd-input{
+  background: transparent;
+  border: none;
+  outline: none;
+  color:var(--text);
+  font-family:inherit;
+  font-size:inherit;
+  flex:1;
+  padding:0 6px;
+  /* hide native text caret so only our custom block caret is visible */
+  caret-color: transparent;
+}
+
+.input-inline{display:flex;align-items:center;gap:8px}
+.input-inline .cmd-input{flex:0 1 auto; min-width:40px}
+
+/* input wrapper for measured caret */
+.input-wrapper{position:relative;display:inline-block}
+.input-wrapper .caret-block{position:absolute;top:0;left:0;transform:translateY(6%);height:1.05em;width:8px;background:var(--text);border-radius:2px;opacity:0.96}
+.input-wrapper .ruler{position:absolute;visibility:hidden;white-space:pre;}
+
+/* local font-face for pixel-exact rendering when provided by user */
+@font-face{
+  font-family: 'SFMonoLocal';
+  src: url('./assets/fonts/SFMonoLocal.woff2') format('woff2');
+  font-weight: 400 700;
+  font-style: normal;
+  font-display: swap;
+}
+/* prefer local font if present */
+body{font-family: 'SFMonoLocal', Menlo, 'IBM Plex Mono', 'Fira Mono', monospace}
+/* remove forced large width so input sits immediately after prompt */
+.input-inline .prompt{min-width:auto}
+
+/* exact apple terminal look: smaller top padding and taller rounded corners */
+#console{border-radius:12px;padding-top:28px}
+#console::before{height:36px;top:-18px}
+#console .window-controls{top:-12px;left:20px}
+
+/* responsive sizing to match various screens */
+@media (min-width:1200px){ #console{max-width:1200px} }
+@media (max-width:720px){ #console{max-width:94vw; font-size:14px} #console-output{max-height:60vh} }
+@media (max-width:420px){ #console{font-size:13px} }
+
+/* caret block style to resemble the screenshot */
+.caret-block{display:inline-block;width:10px;height:1.1em;background:#ffffff;margin-left:6px;vertical-align:middle;animation:blink 1s steps(2,start) infinite}
+.cmd-input::placeholder{color:rgba(155,255,122,0.28)}
+
+/* blinking caret for non-input echoed lines */
+.caret{display:inline-block;width:10px;background:var(--text);margin-left:4px;height:1em;vertical-align:middle;animation:blink 1s steps(2,start) infinite}
+@keyframes blink{50%{opacity:0}}
+
+/* Buttons and controls for index page */
+.puzzle-controls{margin-top:12px;display:flex;gap:8px;align-items:center}
+.btn{background:transparent;border:1px solid rgba(155,255,122,0.12);color:var(--text);padding:8px 12px;border-radius:6px;cursor:pointer}
+.btn:hover{background:rgba(155,255,122,0.02);box-shadow:0 4px 18px rgba(0,255,120,0.03)}
+.small{font-size:14px}
+
+/* subtle neon underline for links */
+a{color:var(--accent);text-decoration:none;text-shadow:0 0 6px rgba(0,187,204,0.12)}
+
+/* selection color */
+::selection{background:rgba(155,255,122,0.12)}
+
+/* Responsive adjustments */
+@media (max-width:800px){
+  #console{font-size:15px;padding:14px}
+  .console-title{font-size:12px}
+}
+
+@media (max-width:480px){
+  #console{font-size:13px;padding:12px;border-radius:6px}
+  .container{padding:1rem}
+  #console::before{left:8px;right:8px}
+  #console .window-controls{left:12px}
+}
+
+/* Make the terminal window vertically fit the viewport and center content */
+/* Lock page scroll; terminal handles internal scrolling */
+body{overflow:hidden}
+
+/* Footer input area pinned to the bottom of the console */
+.console-footer{
+  position: absolute;
+  left: 18px;
+  right: 18px;
+  bottom: 12px;
+  display:flex;
+  align-items:center;
+  gap:8px;
+  padding-top:8px;
+  border-top: 1px dashed rgba(255,255,255,0.02);
+  background: linear-gradient(180deg, transparent, rgba(0,0,0,0.02));
+}
+
+/* ensure output area doesn't underlap footer */
+#console-output{ padding-bottom:80px }
+
+.prompt .user{ color: var(--prompt); font-weight:600 }
+.prompt .sep{ color: var(--op) }
+
+/* On the index page the pinned repair input lives inside .console-footer.
+  Restore the native caret there so users can type (terminal uses a custom caret). */
+.console-footer .cmd-input{ caret-color: var(--text); z-index:5 }
+
+/* command echo color and output color */
+.cmd-echo{ color: var(--accent); font-weight:600 }
+.cmd-output{ color: #ffffff }
+
+/* small copy button in footer */
+.copy-btn{ background:transparent;border:1px solid rgba(255,255,255,0.06);color:var(--op);padding:6px 8px;border-radius:6px;cursor:pointer }
+.copy-btn:hover{color:var(--accent);border-color:rgba(11,188,204,0.18)}
+

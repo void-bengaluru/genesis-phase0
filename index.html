@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>/void::phase0 — index</title>
+  <link rel="stylesheet" href="./index.css">
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=Fira+Mono&display=swap" rel="stylesheet">
+  <style>
+    /* tiny local tweaks for the puzzle layout */
+    .intro{font-family:inherit}
+    .puzzle{margin-top:12px}
+    .binary{font-family:monospace; color:var(--accent,#fff)}
+  </style>
+</head>
+<body>
+  <main class="container">
+    <div id="console">
+      <div class="window-controls">
+        <span class="wc-red"></span>
+        <span class="wc-yellow"></span>
+        <span class="wc-green"></span>
+      </div>
+      <div class="console-header">
+        <div>
+          <div class="console-title">void-phase0</div>
+          <div class="console-sub">root@void</div>
+        </div>
+        <div class="console-sub">qr integrity check</div>
+      </div>
+
+      <div id="console-inner">
+        <div id="console-output">
+          <div class="console-line intro">/void::phase0
+qr integrity check: <span class="error">FAILED</span>.
+this code was damaged in transit.
+some blocks are missing.
+</div>
+
+          <div class="console-line puzzle puzzle-text">
+        <!-- Binary sequence shown to user. Decodes to a single word. -->
+        <div class="puzzle-text">damaged block dump:</div>
+        <div class="puzzle-binary">01100110 01101001 01111000</div>
+
+        </div>
+
+        <div class="console-footer">
+          <label class="puzzle-text" style="min-width:120px">repair word:</label>
+          <input id="repair" class="cmd-input" type="text" autocomplete="off" aria-label="repair word">
+          <button id="submit" class="btn">Repair</button>
+          <div id="msg" class="console-line" style="margin-left:8px"></div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    // Expected decoded word for the binary above: "fix"
+    (function(){
+      const answer = 'fix';
+      const input = document.getElementById('repair');
+      const btn = document.getElementById('submit');
+      const msg = document.getElementById('msg');
+
+      function normalize(v){return String(v||'').trim().toLowerCase()}
+
+      function handle(){
+        const val = normalize(input.value);
+        if(!val){
+          msg.innerText = 'enter the repair word to continue.';
+          msg.className = 'console-line muted';
+          return;
+        }
+        if(val === answer){
+          // correct → go to terminal
+          window.location.href = './terminal.html';
+        } else {
+          msg.innerText = 'invalid repair. integrity still FAILING.';
+          msg.className = 'console-line error';
+        }
+      }
+
+      btn.addEventListener('click', handle);
+      input.addEventListener('keydown', function(e){ if(e.key === 'Enter') handle(); });
+      // autofocus for convenience
+      input.focus();
+    })();
+  </script>
+</body>
+</html>
