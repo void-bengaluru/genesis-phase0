@@ -53,11 +53,22 @@
       try{ body.ts = body.ts || new Date().toISOString(); }catch(e){}
       // include simple shared secret if configured
       try{ if(LOG_SECRET) body.secret = LOG_SECRET; }catch(e){}
-      fetch(LOG_ENDPOINT, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body)
-      }).catch(()=>{});
+      // Use form-encoded POST (URLSearchParams) to avoid CORS preflight OPTIONS in browsers.
+      try{
+        const params = new URLSearchParams();
+        Object.keys(body).forEach(k => {
+          const v = body[k];
+          params.append(k, typeof v === 'string' ? v : JSON.stringify(v));
+        });
+        fetch(LOG_ENDPOINT, { method: 'POST', body: params }).catch(()=>{});
+      }catch(err){
+        // fallback to JSON POST if URLSearchParams isn't available
+        fetch(LOG_ENDPOINT, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body)
+        }).catch(()=>{});
+      }
     }catch(e){}
   }
 
