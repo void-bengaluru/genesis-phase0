@@ -11,18 +11,33 @@ function doPost(e){
   try{
     if(!e) return jsonResponse({ status: 'error', message: 'no event object' }, 400);
 
-    // Accept either JSON body (application/json) or form-encoded / multipart form posts
+    // Accept either JSON body (application/json) or form-encoded posts.
+    // Prefer `e.parameter` when present (Apps Script populates it for form posts).
     var data = {};
-    if(e.postData && e.postData.contents){
-      try{
-        data = JSON.parse(e.postData.contents || '{}');
-      }catch(parseErr){
-        // If parsing fails, fall back to raw content string
-        data = { raw: e.postData.contents };
-      }
-    } else if(e.parameter && Object.keys(e.parameter).length){
-      // form posts will populate e.parameter / e.parameters
+    if(e.parameter && Object.keys(e.parameter).length){
       Object.keys(e.parameter).forEach(function(k){ data[k] = e.parameter[k]; });
+    } else if(e.postData && e.postData.contents){
+      var content = e.postData.contents || '';
+      var contentType = (e.postData.type || '').toLowerCase();
+      try{
+        if(contentType.indexOf('application/json') !== -1){
+          data = JSON.parse(content || '{}');
+        } else if(contentType.indexOf('application/x-www-form-urlencoded') !== -1){
+          // parse form-encoded body into key/value map
+          content.split('&').forEach(function(pair){
+            if(!pair) return;
+            var kv = pair.split('=');
+            var k = decodeURIComponent(kv[0]||'');
+            var v = decodeURIComponent((kv[1]||'').replace(/\+/g,' '));
+            data[k] = v;
+          });
+        } else {
+          // try JSON parse first, otherwise keep raw
+          try{ data = JSON.parse(content || '{}'); }catch(e2){ data = { raw: content }; }
+        }
+      }catch(parseErr){
+        data = { raw: content };
+      }
     } else {
       return jsonResponse({ status: 'error', message: 'no payload' }, 400);
     }
