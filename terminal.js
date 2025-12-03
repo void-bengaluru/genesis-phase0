@@ -34,7 +34,7 @@
   let gateUnlocked = false;
 
   // --- Logging / passcode configuration (replace LOG_ENDPOINT after deploying Apps Script) ---
-  const LOG_ENDPOINT = 'https://script.google.com/macros/s/AKfycbwz48JW98-wgHK1LPM7HP-MkdLL6joAtpo4fXlZLZ-72loBxNnx4A-GecWvcBvM-gZ_8g/exec'; // e.g. 'https://script.google.com/macros/s/XXXX/exec'
+  const LOG_ENDPOINT = 'https://script.google.com/macros/s/AKfycbwxXAdmxmphhAS6JztF-clWSXq1CLBu-N7XprKBtKR2uC8OPlDlueu1UflJ1Woya8tZug/exec'; // e.g. 'https://script.google.com/macros/s/XXXX/exec'
   const LOG_SECRET = ''; // optional shared secret if you enable it server-side
 
   // helper: send non-blocking log to configured endpoint (fire-and-forget)
